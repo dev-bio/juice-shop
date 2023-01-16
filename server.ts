@@ -115,6 +115,9 @@ const chatbot = require('./routes/chatbot')
 const locales = require('./data/static/locales.json')
 const i18n = require('i18n')
 
+// apply rate limiter to all requests
+app.use(limiter);
+
 const appName = config.get('application.customMetricsPrefix')
 const startupGauge = new client.Gauge({
   name: `${appName}_startup_duration_seconds`,
@@ -139,6 +142,12 @@ void collectDurationPromise('validateConfig', require('./lib/startup/validateCon
 async function restoreOverwrittenFilesWithOriginals () {
   await collectDurationPromise('restoreOverwrittenFilesWithOriginals', require('./lib/startup/restoreOverwrittenFilesWithOriginals'))()
 }
+
+var RateLimit = require('express-rate-limit');
+var limiter = new RateLimit({
+  windowMs: 1*60*1000, // 1 minute
+  max: 5
+});
 
 /* Sets view engine to hbs */
 app.set('view engine', 'hbs')
